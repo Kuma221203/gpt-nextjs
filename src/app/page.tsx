@@ -3,5 +3,5 @@ import getMe from "./get-me";
 export default async function Home() {
   const me = await getMe();
 
-  return <>Hello {me.username}, đây là Home Page</>;
+  return <div>Hello {me?.username}, đây là Home Page</div>;
 }

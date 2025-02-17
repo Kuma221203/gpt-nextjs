@@ -1,10 +1,11 @@
 "use server";
 
+import { FormError } from "@/common/form-error.interface";
+import { getErrorMessage } from "@/utils/error";
 import { jwtDecode } from "jwt-decode";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
-import { FormError } from "@/app/common/form-error.interface";
-import { getErrorMessage } from "@/app/utils/error";
+
 
 
 export default async function login(
@@ -20,8 +21,10 @@ export default async function login(
   })
   const parsedRes = await res.json();
   if (!res.ok) return {error: getErrorMessage(parsedRes)};
-  setAuthCookie(res);
-  redirect("/");
+  await setAuthCookie(res);
+
+  const redirectUrl = formData.get("redirect") as string || "/";
+  redirect(redirectUrl);
 }
 
 

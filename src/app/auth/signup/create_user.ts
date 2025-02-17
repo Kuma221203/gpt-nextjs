@@ -1,7 +1,7 @@
 "use server";
 
-import { FormError } from "@/app/common/form-error.interface";
-import { getErrorMessage } from "@/app/utils/error";
+import { FormError } from "@/common/form-error.interface";
+import { getErrorMessage } from "@/utils/error";
 import { redirect } from "next/navigation"
 
 
@@ -18,6 +18,10 @@ export default async function createUser(
     body: JSON.stringify(Object.fromEntries(formData))
   });
   const parsedRes = await res.json();
-  if(!res.ok) return {error: getErrorMessage(parsedRes)};
+  if(!res.ok){
+    console.log(">> Check error ");
+    
+    return {error: getErrorMessage(parsedRes)};
+  } 
   redirect("/")
 }
