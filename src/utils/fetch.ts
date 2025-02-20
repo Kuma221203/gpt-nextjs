@@ -1,3 +1,5 @@
+"use server";
+
 import { cookies } from "next/headers";
 import { getErrorMessage } from "./error";
 
@@ -10,25 +12,33 @@ const getHeaders = async () => {
   };
 };
 
-export const post = async (path: string, formData: FormData) => {
-  const headers = await getHeaders();
+export const post = async (path: string, data: FormData | object) => {
+  const headers = await getHeaders(); 
+  const body = data instanceof FormData ? Object.fromEntries(data) : data;
   const res = await fetch(`${API_URL}/${path}`, {
     method: "POST",
     headers: { "Content-Type": "application/json", ...headers },
-    body: JSON.stringify(Object.fromEntries(formData)),
+    body: JSON.stringify(body),
   });
+  
   const parsedRes = await res.json();
   if (!res.ok) {
     return { error: getErrorMessage(parsedRes) };
   }
-  return { error: "" };
+  return { error: "", data: parsedRes };
 };
 
-export const get = async (path: string) => {
+export const get = async (
+  path: string,
+  tags?: string[],
+  params?: URLSearchParams
+) => {
   const headers = await getHeaders(); 
-  
-  const res = await fetch(`${API_URL}/${path}`, {
+  const url = params ? `${API_URL}/${path}?` + params : `${API_URL}/${path}`;
+  const res = await fetch(url, {
     headers: { ...headers },
+    next: { tags },
   });
-  return res.json();
+  return res.json() ;
 };
+

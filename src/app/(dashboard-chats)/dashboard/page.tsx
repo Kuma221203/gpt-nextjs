@@ -5,9 +5,16 @@ import ImageSearchIcon from '@mui/icons-material/ImageSearch';
 import SummarizeIcon from '@mui/icons-material/Summarize';
 import StickyNote2Icon from '@mui/icons-material/StickyNote2';
 import { useRef, useState } from "react";
+import { postNewState } from '../handleApi';
+import { redirect } from 'next/navigation';
+
+type NewState = {
+  stateId: string,
+}
 
 export default function Dashboard() {
-  const [text, setText] = useState("");
+  const [text, setText] = useState<string>("");
+  const [model, setModel] = useState<string>("gpt-4o");
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
   const handleInput = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const textarea = textareaRef.current;
@@ -17,13 +24,17 @@ export default function Dashboard() {
     }
     setText(e.target.value);
   };
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+  async function fetchNewState(){
+    const response = await postNewState(model, text);
+    redirect(`chats/${response.stateId}`);
+  }
+  const handleKeyDown = async (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === "Enter" && !e.shiftKey) {
-      e.preventDefault(); 
-      console.log("Gửi tin nhắn:", text);
-      setText(""); 
+      e.preventDefault();
+      await fetchNewState()
+      setText("");
       if (textareaRef.current) {
-        textareaRef.current.style.height = "auto"; 
+        textareaRef.current.style.height = "auto";
       }
     }
   };

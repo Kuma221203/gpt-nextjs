@@ -1,6 +1,6 @@
 "use client"
 import { Main, NavigationDashboardLayout, SidebarDashboardLayout } from "@/components/cpn_dashboard";
-import { Box, Container } from "@mui/material";
+import { Box } from "@mui/material";
 import { useState } from "react";
 import logout from "../auth/logout";
 

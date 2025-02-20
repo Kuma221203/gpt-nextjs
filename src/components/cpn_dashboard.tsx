@@ -17,6 +17,7 @@ import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import ExpandLessIcon from '@mui/icons-material/ExpandLess';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import { redirect } from 'next/navigation'
+import {getModelList, getStateList} from '@/app/(dashboard-chats)/handleApi';
 
 const drawerWidth = 320;
 
@@ -87,12 +88,38 @@ interface NavigationProps {
   logout: () => void;
 }
 
+type Model = {
+  name: string;
+  description: string;
+};
+
 export function NavigationDashboardLayout({ open, handleDrawerOpen, logout }: NavigationProps) {
   const [anchorUser, setAnchorUser] = React.useState<null | HTMLElement>(null);
   const [anchorModels, setAnchorModels] = React.useState<null | HTMLElement>(null);
+  const [model, setModel] = React.useState<Model | null>(null);
+  const [modelList, setModelList] = React.useState<Model[]>([])
   const handleMenu = (event: React.MouseEvent<HTMLElement>) => {
     setAnchorUser(event.currentTarget);
   };
+
+  const handleSelectModel = (name: string) => {
+    setModel({
+      name: name || "Unknown",
+      description: "No description available",
+    });
+  };
+
+  React.useEffect(() => {
+    async function fetchModelList() {
+      const modelList = await getModelList();
+      setModelList(modelList);
+      if (modelList.length > 0) {
+        setModel(modelList[0]);
+      }
+    }
+    fetchModelList();
+  }, []);
+
 
   const handleClose = () => {
     setAnchorUser(null);
@@ -145,9 +172,9 @@ export function NavigationDashboardLayout({ open, handleDrawerOpen, logout }: Na
             aria-haspopup="true"
             onClick={handleModels}
             color="inherit"
-
           >
-            <ListItemText primary="ChatGPT 4o" />
+            <ListItemText primary={model?.name}
+            />
             {anchorModels ? <ExpandLessIcon /> : <ExpandMoreIcon />}
           </ListItemButton >
           <Menu
@@ -174,13 +201,20 @@ export function NavigationDashboardLayout({ open, handleDrawerOpen, logout }: Na
                   width: drawerWidth,
                   boxSizing: 'border-box',
                 },
+                display: 'flex',
+                flexDirection: "column",
               }}
             >
-              <ListItemText
-                primary="GPT-4o"
-                secondary="Greate for most questions"
-              />
-              <CheckCircleIcon fontSize="small" />
+              {modelList?.map(({ name, description }, index) => (
+                <span className='w-full' key={index}>
+                  <div className='flex justify-between items-center'>
+                    <ListItemButton onClick={() => handleSelectModel(name)}>
+                      <ListItemText primary={name} secondary={description} />
+                    </ListItemButton>
+                    {name === model?.name && <CheckCircleIcon fontSize="small" />}
+                  </div>
+                </span>
+              ))}
             </MenuItem>
           </Menu>
         </List>
@@ -233,14 +267,22 @@ interface SidebarProps {
   handleDrawerClose: () => void;
 }
 
+type State = {
+  id: string,
+  titile: string,
+}
+
 export function SidebarDashboardLayout({ open, handleDrawerClose }: SidebarProps) {
-  const chatList = [
-    {titile: "Chat 1", id: "1"},
-    {titile: "Chat 2", id: "2"},
-    {titile: "Chat 3", id: "3"},
-    {titile: "Chat 4", id: "4"},
-    {titile: "Chat 5", id: "5"},
-  ]
+  const [stateList, setStateList] = React.useState<State[]>([]) 
+
+  React.useEffect(() => {
+    async function fetchStateList() {
+      const stateList = await getStateList();
+      setStateList(stateList)
+    }
+    fetchStateList();
+  }, []);
+
   return (
     <Drawer
       sx={{
@@ -276,10 +318,10 @@ export function SidebarDashboardLayout({ open, handleDrawerClose }: SidebarProps
 
       <List disablePadding>
         <h3 className='m-2 text-2xl font-bold'>Chats</h3>
-        {chatList.map(({titile, id}, index) => (
+        {stateList.map(({ id, titile}, index) => (
           <ListItem key={`titile_${index}`} disablePadding>
             <ListItemButton onClick={() => redirect(`/chats/${id}`)}>
-              <ListItemText primary={titile}/>
+              <span className='text-sm flex-grow items-center pl-2'>{titile}</span>
               <IconButton>
                 <MoreVertIcon />
               </IconButton>

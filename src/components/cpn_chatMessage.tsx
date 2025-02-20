@@ -39,7 +39,7 @@ export function ModelMessage({ message }: MessageProps) {
                   </pre>
                 );
               },
-              code({ node, className, children, ...props }) {
+              code({ className, children, ...props }) {
                 const match = /language-(\w+)/.exec(className || "");
                 return match ? (
                   <>
