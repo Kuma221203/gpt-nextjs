@@ -1,5 +1,6 @@
 import { cookies } from "next/headers";
 
 export default async function authenticaed() {
-  return !!(await cookies()).get('Authentication')?.value;
+  const isAuth = !!(await cookies()).get('Authentication')?.value
+  return isAuth;
 }

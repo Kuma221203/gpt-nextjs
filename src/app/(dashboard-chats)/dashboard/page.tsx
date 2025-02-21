@@ -8,13 +8,10 @@ import { useRef, useState } from "react";
 import { postNewState } from '../handleApi';
 import { redirect } from 'next/navigation';
 
-type NewState = {
-  stateId: string,
-}
 
 export default function Dashboard() {
   const [text, setText] = useState<string>("");
-  const [model, setModel] = useState<string>("gpt-4o");
+  const model = "gpt-4o";
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
   const handleInput = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const textarea = textareaRef.current;

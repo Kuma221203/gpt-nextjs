@@ -1,14 +1,22 @@
 import { NextRequest, NextResponse } from "next/server";
-import authenticaed from "./app/auth/authenticated";
 
-const unauthorizedRoutes = ["/auth/login", "/auth/signup", "/about"]
+const unauthorizedRoutes = ["/auth/login", "/auth/signup", "/"];
+const authorizedRoutes = ["/auth/login", "/auth/signup"];
+
 export function middleware(request: NextRequest) {
-
-  if (!authenticaed() && !unauthorizedRoutes.some((route) => request.nextUrl.pathname.startsWith(route))) {
+  const authCookie = request.cookies.get("Authentication");
+  const isAuthenticated = !!authCookie?.value;
+  
+  if (!isAuthenticated && !unauthorizedRoutes.some(route =>request.nextUrl.pathname === route)) {
     const loginUrl = new URL("/auth/login", request.url);
     loginUrl.searchParams.set("redirect", request.nextUrl.pathname);
     return NextResponse.redirect(loginUrl);
-}
+  }
+
+  if (isAuthenticated && authorizedRoutes.some(route =>request.nextUrl.pathname === route)) {
+    const aboutUrl = new URL("/", request.url);
+    return NextResponse.redirect(aboutUrl);
+  }
 
   return NextResponse.next();
 }
