@@ -3,10 +3,10 @@
 import { useActionState } from "react";
 import Link from "next/link";
 import Head from "next/head";
-import createUser from "./create_user";
+import signup from "./signup";
 
 export default function Signup() {
-  const [formState, formAction] = useActionState(createUser, { error: "" });
+  const [formState, formAction] = useActionState(signup, { error: "" });
 
   return (
     <>

@@ -4,7 +4,6 @@ import { styled } from '@mui/material/styles';
 import Drawer from '@mui/material/Drawer';
 import MuiAppBar, { AppBarProps as MuiAppBarProps } from '@mui/material/AppBar';
 import Toolbar from '@mui/material/Toolbar';
-import Divider from '@mui/material/Divider';
 import IconButton from '@mui/material/IconButton';
 import MenuIcon from '@mui/icons-material/Menu';
 import SearchIcon from '@mui/icons-material/Search';
@@ -12,27 +11,45 @@ import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline';
 import MoreVertIcon from '@mui/icons-material/MoreVert';
 import MenuOpenIcon from '@mui/icons-material/MenuOpen';
 import AccountCircleIcon from '@mui/icons-material/AccountCircle';
-import { List, ListItem, ListItemButton, ListItemText, Menu, MenuItem } from '@mui/material';
+import { createTheme, List, ListItem, ListItemButton, ListItemText, Menu, MenuItem } from '@mui/material';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import ExpandLessIcon from '@mui/icons-material/ExpandLess';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import { redirect } from 'next/navigation'
-import {getModelList, getStateList} from '@/app/(dashboard-chats)/handleApi';
+import { getModelList, getStateList } from '@/app/(dashboard-chats)/handleApi';
+import { useDashboardContext } from '@/app/(dashboard-chats)/DashboardContext';
 
-const drawerWidth = 320;
+const drawerDestopWidth = 320;
+const drawerMobileWidth = 260;
+
+const theme = createTheme({
+  breakpoints: {
+    values: {
+      xs: 0,
+      sm: 576,
+      md: 768,
+      lg: 1024,
+      xl: 1200,
+    },
+  },
+});
 
 export const Main = styled('main', { shouldForwardProp: (prop) => prop !== 'open' })<{
   open?: boolean;
-}>(({ theme }) => ({
+}>(() => ({
   display: "flex",
   flexDirection: "column",
   flex: 1,
   height: "100vh",
+  zIndex: 10,
+  marginLeft: `-${drawerDestopWidth}px`,
+  [theme.breakpoints.down('lg')]: {
+    marginLeft: 0,
+  },
   transition: theme.transitions.create('margin', {
     easing: theme.transitions.easing.sharp,
     duration: theme.transitions.duration.leavingScreen,
   }),
-  marginLeft: `-${drawerWidth}px`,
   variants: [
     {
       props: ({ open }) => open,
@@ -46,7 +63,6 @@ export const Main = styled('main', { shouldForwardProp: (prop) => prop !== 'open
     },
   ],
 }));
-
 interface AppBarProps extends MuiAppBarProps {
   open?: boolean;
 }
@@ -62,12 +78,17 @@ const AppBar = styled(MuiAppBar, {
     {
       props: ({ open }) => open,
       style: {
-        width: `calc(100% - ${drawerWidth}px)`,
-        marginLeft: `${drawerWidth}px`,
+        width: `calc(100% - ${drawerDestopWidth}px)`,
+        marginLeft: `${drawerDestopWidth}px`,
         transition: theme.transitions.create(['margin', 'width'], {
           easing: theme.transitions.easing.easeOut,
           duration: theme.transitions.duration.enteringScreen,
         }),
+        [theme.breakpoints.down('lg')]: {
+          marginLeft: 0,
+          width: '100%',
+          zIndex: 5,
+        },
       },
     },
   ],
@@ -96,17 +117,15 @@ type Model = {
 export function NavigationDashboardLayout({ open, handleDrawerOpen, logout }: NavigationProps) {
   const [anchorUser, setAnchorUser] = React.useState<null | HTMLElement>(null);
   const [anchorModels, setAnchorModels] = React.useState<null | HTMLElement>(null);
-  const [model, setModel] = React.useState<Model | null>(null);
-  const [modelList, setModelList] = React.useState<Model[]>([])
+  const { model, setModel } = useDashboardContext();
+  const [modelList, setModelList] = React.useState<Model[]>([]);
+
   const handleMenu = (event: React.MouseEvent<HTMLElement>) => {
     setAnchorUser(event.currentTarget);
   };
 
   const handleSelectModel = (name: string) => {
-    setModel({
-      name: name || "Unknown",
-      description: "No description available",
-    });
+    setModel(name);
   };
 
   React.useEffect(() => {
@@ -114,12 +133,11 @@ export function NavigationDashboardLayout({ open, handleDrawerOpen, logout }: Na
       const modelList = await getModelList();
       setModelList(modelList);
       if (modelList.length > 0) {
-        setModel(modelList[0]);
+        setModel(modelList[0].name); // Sửa ở đây: chỉ lấy name
       }
     }
     fetchModelList();
   }, []);
-
 
   const handleClose = () => {
     setAnchorUser(null);
@@ -143,10 +161,12 @@ export function NavigationDashboardLayout({ open, handleDrawerOpen, logout }: Na
             onClick={handleDrawerOpen}
             edge="start"
             sx={[
-              {
-                mr: 0,
+              { mr: 0 },
+              open && {
+                [theme.breakpoints.up('lg')]: {
+                  display: 'none',
+                },
               },
-              open && { display: 'none' },
             ]}
           >
             <MenuIcon fontSize='large' />
@@ -156,15 +176,21 @@ export function NavigationDashboardLayout({ open, handleDrawerOpen, logout }: Na
             sx={[
               {
                 mr: 0,
+                [theme.breakpoints.down('sm')]: {
+                  display: 'none',
+                },
               },
-              open && { display: 'none' },
+              open && {
+                [theme.breakpoints.up('lg')]: {
+                  display: 'none',
+                },
+              },
             ]}
             onClick={() => redirect("/dashboard")}
           >
             <AddCircleOutlineIcon fontSize='large' />
           </IconButton>
         </span>
-        {/* --------------------------------------- */}
         <List sx={{ fontSize: 34, fontWeight: 700 }}>
           <ListItemButton
             aria-label="models"
@@ -173,10 +199,9 @@ export function NavigationDashboardLayout({ open, handleDrawerOpen, logout }: Na
             onClick={handleModels}
             color="inherit"
           >
-            <ListItemText primary={model?.name}
-            />
+            <ListItemText primary={model} />
             {anchorModels ? <ExpandLessIcon /> : <ExpandMoreIcon />}
-          </ListItemButton >
+          </ListItemButton>
           <Menu
             id="menu-models"
             anchorEl={anchorModels}
@@ -195,10 +220,10 @@ export function NavigationDashboardLayout({ open, handleDrawerOpen, logout }: Na
             <MenuItem
               onClick={handleCloseModels}
               sx={{
-                width: drawerWidth,
+                width: drawerDestopWidth,
                 flexShrink: 0,
                 '& .MuiDrawer-paper': {
-                  width: drawerWidth,
+                  width: drawerDestopWidth,
                   boxSizing: 'border-box',
                 },
                 display: 'flex',
@@ -211,14 +236,13 @@ export function NavigationDashboardLayout({ open, handleDrawerOpen, logout }: Na
                     <ListItemButton onClick={() => handleSelectModel(name)}>
                       <ListItemText primary={name} secondary={description} />
                     </ListItemButton>
-                    {name === model?.name && <CheckCircleIcon fontSize="small" />}
+                    {name === model && <CheckCircleIcon fontSize="small" />}
                   </div>
                 </span>
               ))}
             </MenuItem>
           </Menu>
         </List>
-        {/* --------------------------------------- */}
         <div>
           <IconButton
             size="large"
@@ -259,9 +283,8 @@ export function NavigationDashboardLayout({ open, handleDrawerOpen, logout }: Na
         </div>
       </Toolbar>
     </AppBar>
-  )
+  );
 }
-
 interface SidebarProps {
   open: boolean;
   handleDrawerClose: () => void;
@@ -273,62 +296,76 @@ type State = {
 }
 
 export function SidebarDashboardLayout({ open, handleDrawerClose }: SidebarProps) {
-  const [stateList, setStateList] = React.useState<State[]>([]) 
-
+  const [stateList, setStateList] = React.useState<State[]>([])
+  const { newStateId } = useDashboardContext();
   React.useEffect(() => {
     async function fetchStateList() {
       const stateList = await getStateList();
       setStateList(stateList)
     }
     fetchStateList();
-  }, []);
+  }, [newStateId]);
 
   return (
     <Drawer
       sx={{
-        width: drawerWidth,
+        width: drawerDestopWidth,
         flexShrink: 0,
         '& .MuiDrawer-paper': {
-          width: drawerWidth,
+          width: drawerDestopWidth,
+          [theme.breakpoints.down('sm')]: {
+            width: drawerMobileWidth,
+          },
           boxSizing: 'border-box',
         },
-        height: "100%"
       }}
+      className='flex flex-col z-50 fixed lg:static  '
       variant="persistent"
       anchor="left"
       open={open}
     >
-      <DrawerHeader>
-        <IconButton onClick={handleDrawerClose}>
-          <MenuOpenIcon fontSize='large' />
+      {/* Header cố định */}
+      <DrawerHeader className="flex justify-between w-full ">
+        <IconButton className='min-h-16' onClick={handleDrawerClose}>
+          <MenuOpenIcon fontSize="large" />
         </IconButton>
         <span>
           <IconButton>
-            <SearchIcon fontSize='large' />
+            <SearchIcon fontSize="large" />
           </IconButton>
-          <IconButton
-            onClick={() => redirect("/dashboard")}
-          >
-            <AddCircleOutlineIcon fontSize='large' />
+          <IconButton onClick={() => redirect("/dashboard")}>
+            <AddCircleOutlineIcon fontSize="large" />
           </IconButton>
         </span>
       </DrawerHeader>
+      <div className="border-t-gray-400 border-t-[1px]">
+        <h3 className="m-2 text-2xl font-bold ">Chat History</h3>
 
-      <Divider />
-
-      <List disablePadding>
-        <h3 className='m-2 text-2xl font-bold'>Chats</h3>
-        {stateList.map(({ id, titile}, index) => (
-          <ListItem key={`titile_${index}`} disablePadding>
-            <ListItemButton onClick={() => redirect(`/chats/${id}`)}>
-              <span className='text-sm flex-grow items-center pl-2'>{titile}</span>
-              <IconButton>
-                <MoreVertIcon />
-              </IconButton>
-            </ListItemButton>
-          </ListItem>
-        ))}
-      </List>
+      </div>
+      {/* Phần nội dung cuộn được */}
+      <div className='flex-1 overflow-y-auto'>
+        <List disablePadding>
+          {stateList.map(({ id, titile }, index) => (
+            <ListItem
+              className="group hover:bg-gray-200 hover:rounded-xl relative"
+              key={`titile_${index}`}
+              disablePadding
+            >
+              <ListItemButton className="flex items-center" onClick={() => redirect(`/chats/${id}`)}>
+                <div className=" flex-grow pl-1">
+                  <span className="text-sm block overflow-hidden whitespace-nowrap">
+                    {titile}
+                  </span>
+                  <div className="pointer-events-none absolute inset-y-0 right-0 w-12 bg-gradient-to-l from-white to-transparent group-hover:hidden"></div>
+                </div>
+                <IconButton className='absolute left-0'>
+                  <MoreVertIcon />
+                </IconButton>
+              </ListItemButton>
+            </ListItem>
+          ))}
+        </List>
+      </div>
     </Drawer>
   )
 }

@@ -1,16 +1,17 @@
 "use server";
 
+import { BACKEND_URL } from "@/common/constant/const";
 import { FormError } from "@/common/form-error.interface";
 import { getErrorMessage } from "@/utils/error";
 import { redirect } from "next/navigation"
 
 
-export default async function createUser(
+export default async function signup(
   _prevState: FormError,
   formData: FormData
 ) {
   
-  const res = await fetch('http://localhost:8080/users', {
+  const res = await fetch(`${BACKEND_URL}/users`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json'
@@ -19,8 +20,6 @@ export default async function createUser(
   });
   const parsedRes = await res.json();
   if(!res.ok){
-    console.log(">> Check error ");
-    
     return {error: getErrorMessage(parsedRes)};
   } 
   redirect("/")

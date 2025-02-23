@@ -2,8 +2,7 @@
 
 import { cookies } from "next/headers";
 import { getErrorMessage } from "./error";
-
-const API_URL = "http://localhost:8080" 
+import { BACKEND_URL } from "@/common/constant/const";
 
 const getHeaders = async () => {
   const cookieStore = await cookies(); 
@@ -15,7 +14,7 @@ const getHeaders = async () => {
 export const post = async (path: string, data: FormData | object) => {
   const headers = await getHeaders(); 
   const body = data instanceof FormData ? Object.fromEntries(data) : data;
-  const res = await fetch(`${API_URL}/${path}`, {
+  const res = await fetch(`${BACKEND_URL}/${path}`, {
     method: "POST",
     headers: { "Content-Type": "application/json", ...headers },
     body: JSON.stringify(body),
@@ -34,7 +33,7 @@ export const get = async (
   params?: URLSearchParams
 ) => {
   const headers = await getHeaders(); 
-  const url = params ? `${API_URL}/${path}?` + params : `${API_URL}/${path}`;
+  const url = params ? `${BACKEND_URL}/${path}?` + params : `${BACKEND_URL}/${path}`;
   const res = await fetch(url, {
     headers: { ...headers },
     next: { tags },

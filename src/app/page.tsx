@@ -26,7 +26,7 @@ export default function Home() {
               :
               (<>
                 <Link
-                  href="/login"
+                  href="/auth/login"
                   className="bg-transparent text-yellow-300 hover:text-yellow-700 rounded shadow hover:shadow-lg py-2 px-2 border border-transparent hover:border-transparent transition duration-300"
                 >
                   Login
